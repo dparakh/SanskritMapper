@@ -1,18 +1,24 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <iostream>
+#include <QDir>
 
 using namespace std;
+
+static const char kDefaultFile[] = ".SanskritMapper.map";
+#define DEFAULT_FILE QDir::homePath() + "/" + kDefaultFile
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    m_CurrentMap.LoadFromFile(DEFAULT_FILE);
 }
 
 MainWindow::~MainWindow()
 {
+    m_CurrentMap.SaveToFile(DEFAULT_FILE);
     delete ui;
 }
 
@@ -29,6 +35,7 @@ void MainWindow::on_mappingText_textEdited(const QString & arg1)
     ui->mappingCode->setText(mappedCode);
     //ToDo: We should also cause an update of the mapped chars list
     //as well as the mapped Text
+    UpdatedMappedViews();
 }
 
 void MainWindow::on_mappingCode_textEdited(const QString & /*arg1*/)
@@ -64,7 +71,7 @@ void MainWindow::on_sourceTextEdit_textChanged()
 
         ui->sourceCharsList->addItem(charDescription);
     }
-    
+    UpdatedMappedViews();
 }
 
 void MainWindow::on_sourceCharsList_currentRowChanged(int currentRow)
@@ -95,4 +102,49 @@ void MainWindow::on_updateMapButton_clicked()
        m_CurrentMap.UpdateMapEntry(ui->sourceTextEdit->toPlainText().at(currentRow).toLatin1(),
                                    ui->mappingText->text(), ui->mapAsPostFix->isChecked());
     }
+    UpdatedMappedViews();
+}
+
+void MainWindow::UpdatedMappedViews()
+{
+    ui->mappedCharsList->clear();
+    //for each characeter in the source text
+    QString sourceText = ui->sourceTextEdit->toPlainText();
+    QString fullMappedText;
+
+    int charIndex(0);
+    foreach (QChar sourceChar, sourceText)
+    {
+        QString mappedText;
+        bool mappedPostFix(false);
+        if (m_CurrentMap.FindMapEntry(sourceChar.toLatin1(),
+                                      mappedText, mappedPostFix))
+        {
+            QString mappedCode;
+            foreach (QChar mappedChar, mappedText)
+            {
+                QString unicodeHex;
+                unicodeHex.sprintf("%04x", mappedChar.unicode());
+                mappedCode += unicodeHex;
+            }
+            QString charDescription;
+            charDescription += mappedText + " [" + mappedCode + "]";
+            ui->mappedCharsList->addItem(charDescription);
+            fullMappedText += mappedText;
+        }
+        else
+        {
+            ui->mappedCharsList->addItem(ui->sourceCharsList->item(charIndex)->text());
+            ui->mappedCharsList->item(charIndex)->setBackgroundColor(Qt::red);
+            fullMappedText += sourceChar;
+        }
+        ++charIndex;
+    }
+
+    ui->mappedText->setPlainText(fullMappedText);
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    //m_CurrentMap.SaveToFile("/tmp/test.json");
 }

@@ -4,6 +4,8 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    a.setOrganizationName("DevendraParakh");
+    a.setApplicationName("SanskritMapper");
     MainWindow w;
     w.show();
     

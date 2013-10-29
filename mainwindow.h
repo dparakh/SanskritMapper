@@ -28,9 +28,13 @@ private slots:
 
     void on_updateMapButton_clicked();
 
+    void on_actionSave_triggered();
+
 private:
     Ui::MainWindow *ui;
     dp::MappingModel m_CurrentMap;
+
+    void UpdatedMappedViews ();
 };
 
 #endif // MAINWINDOW_H

@@ -33,14 +33,32 @@ void MainWindow::on_mappingText_textEdited(const QString & arg1)
         mappedCode += unicodeHex;
     }
     ui->mappingCode->setText(mappedCode);
-    //ToDo: We should also cause an update of the mapped chars list
+    //We should also cause an update of the mapped chars list
     //as well as the mapped Text
-    UpdatedMappedViews();
+    UpdateMappedViews();
 }
 
-void MainWindow::on_mappingCode_textEdited(const QString & /*arg1*/)
+void MainWindow::on_mappingCode_textEdited(const QString & arg1)
 {
+    //A copy to work with.
+    QString workingCopy (arg1);
+    QString resultingCode;
 
+    while (workingCopy.size())
+    {
+        //take up to 4 hex encoded asii chars, which respresent one Unicode char.
+        QString workingChar (workingCopy.left(4));
+        //remove what we took from the working copy
+        workingCopy.remove(0, workingChar.size());
+        //convert to a QChar and append to the resulting code
+        resultingCode += QChar (workingChar.toShort(false, 16));
+    }
+
+    //update the mappingText
+    ui->mappingText->setText(resultingCode);
+
+    //Update everything else.
+    UpdateMappedViews();
 }
 
 //**********************************************************************************************
@@ -71,7 +89,7 @@ void MainWindow::on_sourceTextEdit_textChanged()
 
         ui->sourceCharsList->addItem(charDescription);
     }
-    UpdatedMappedViews();
+    UpdateMappedViews();
 }
 
 void MainWindow::on_sourceCharsList_currentRowChanged(int currentRow)
@@ -102,10 +120,10 @@ void MainWindow::on_updateMapButton_clicked()
        m_CurrentMap.UpdateMapEntry(ui->sourceTextEdit->toPlainText().at(currentRow).toLatin1(),
                                    ui->mappingText->text(), ui->mapAsPostFix->isChecked());
     }
-    UpdatedMappedViews();
+    UpdateMappedViews();
 }
 
-void MainWindow::UpdatedMappedViews()
+void MainWindow::UpdateMappedViews()
 {
     ui->mappedCharsList->clear();
     //for each characeter in the source text

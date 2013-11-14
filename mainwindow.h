@@ -34,7 +34,7 @@ private:
     Ui::MainWindow *ui;
     dp::MappingModel m_CurrentMap;
 
-    void UpdatedMappedViews ();
+    void UpdateMappedViews ();
 };
 
 #endif // MAINWINDOW_H

@@ -35,6 +35,8 @@ private:
     dp::MappingModel m_CurrentMap;
 
     void UpdateMappedViews ();
+    int GetMappingLocation ();
+    void SetMappingLocation (int in_newLocatoin);
 };
 
 #endif // MAINWINDOW_H

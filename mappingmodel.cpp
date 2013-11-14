@@ -10,23 +10,23 @@ using namespace std;
 //The keys for each JSon object
 static const char kSourceChar[] = "SourceChar";
 static const char kMappedText[] = "MappedText";
-static const char kIsPostFix[] = "IsPostFix";
+static const char kLocation[] = "Location";
 
 
-void dp::MappingModel::UpdateMapEntry(const char in_key, const QString &in_value, bool in_isPostFix)
+void dp::MappingModel::UpdateMapEntry(const char in_key, const QString &in_value, int in_location)
 {
-    m_TheMap[in_key] = make_pair(in_value, in_isPostFix);
+    m_TheMap[in_key] = make_pair(in_value, in_location);
     //cout << "k = " << in_key << ", v = " << in_value.toUtf8().data() << endl;
 }
 
-bool dp::MappingModel::FindMapEntry(const char in_key, QString &out_value, bool &out_isPostFix)
+bool dp::MappingModel::FindMapEntry(const char in_key, QString &out_value, int &out_location)
 {
     bool retVal = false;
     MyMap::const_iterator mapIter = m_TheMap.find(in_key);
     if (mapIter != m_TheMap.end())
     {
         out_value = mapIter->second.first;
-        out_isPostFix = mapIter->second.second;
+        out_location = mapIter->second.second;
         retVal = true;
     }
 
@@ -57,7 +57,7 @@ bool dp::MappingModel::LoadFromFile(const QString & in_fileToLoadFrom)
                 {
                     const QJsonObject mappingObject((*arrayIter).toObject());
                     m_TheMap[mappingObject.value(kSourceChar).toDouble()] = make_pair(mappingObject.value(kMappedText).toString(),
-                                                                                      mappingObject.value(kIsPostFix).toBool());
+                                                                                      (int)mappingObject.value(kLocation).toDouble());
                 }
             }
 
@@ -78,7 +78,7 @@ bool dp::MappingModel::SaveToFile(const QString & in_fileToSaveTo)
         QJsonObject mappingObject;
         mappingObject.insert(kSourceChar, QJsonValue(mapIter->first));
         mappingObject.insert(kMappedText, QJsonValue(mapIter->second.first));
-        mappingObject.insert(kIsPostFix, QJsonValue(mapIter->second.second));
+        mappingObject.insert(kLocation, QJsonValue(mapIter->second.second));
         arrayOfEncodings.append(mappingObject);
     }
 

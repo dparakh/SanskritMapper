@@ -73,9 +73,26 @@
          <widget class="QLineEdit" name="mappingCode"/>
         </item>
         <item>
-         <widget class="QCheckBox" name="mapAsPostFix">
+         <widget class="QRadioButton" name="mapAsPostFix">
           <property name="text">
            <string>PostFix</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="mapAsPreFix">
+          <property name="text">
+           <string>PreFix</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="mapAsInPlace">
+          <property name="text">
+           <string>InPlace</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

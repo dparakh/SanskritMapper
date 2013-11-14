@@ -100,16 +100,17 @@ void MainWindow::on_sourceCharsList_currentRowChanged(int currentRow)
     if (0 <= currentRow)
     {
         QString mappedText;
-        bool mappedPostFix(false);
+        int mappedLocation(0);
         if (m_CurrentMap.FindMapEntry(ui->sourceTextEdit->toPlainText().at(currentRow).toLatin1(),
-                                      mappedText, mappedPostFix))
+                                      mappedText, mappedLocation))
         {
             ui->mappingText->setText(mappedText);
             on_mappingText_textEdited(mappedText);
-            ui->mapAsPostFix->setChecked(mappedPostFix);
+            SetMappingLocation(mappedLocation);
         }
     }
     //ToDo: Also change the current Row of the mapped Chars list!
+    ui->mappedCharsList->setCurrentRow(currentRow);
 }
 
 void MainWindow::on_updateMapButton_clicked()
@@ -118,7 +119,7 @@ void MainWindow::on_updateMapButton_clicked()
     if (0 <= currentRow)
     {
        m_CurrentMap.UpdateMapEntry(ui->sourceTextEdit->toPlainText().at(currentRow).toLatin1(),
-                                   ui->mappingText->text(), ui->mapAsPostFix->isChecked());
+                                   ui->mappingText->text(), GetMappingLocation());
     }
     UpdateMappedViews();
 }
@@ -129,14 +130,15 @@ void MainWindow::UpdateMappedViews()
     //for each characeter in the source text
     QString sourceText = ui->sourceTextEdit->toPlainText();
     QString fullMappedText;
+    QString toPostFix;
 
     int charIndex(0);
     foreach (QChar sourceChar, sourceText)
     {
         QString mappedText;
-        bool mappedPostFix(false);
+        int mappedLocation(0);
         if (m_CurrentMap.FindMapEntry(sourceChar.toLatin1(),
-                                      mappedText, mappedPostFix))
+                                      mappedText, mappedLocation))
         {
             QString mappedCode;
             foreach (QChar mappedChar, mappedText)
@@ -148,7 +150,19 @@ void MainWindow::UpdateMappedViews()
             QString charDescription;
             charDescription += mappedText + " [" + mappedCode + "]";
             ui->mappedCharsList->addItem(charDescription);
-            fullMappedText += mappedText;
+            if (mappedLocation == dp::MappingModel::kLocationPostFix)
+            {
+                toPostFix += mappedText;
+            }
+            else if (mappedLocation == dp::MappingModel::kLocationPrefix)
+            {
+                fullMappedText = fullMappedText.left(fullMappedText.size()-1) + mappedText + fullMappedText.right(1);
+            }
+            else
+            {
+                fullMappedText += mappedText + toPostFix;
+                toPostFix.clear();
+            }
         }
         else
         {
@@ -160,6 +174,36 @@ void MainWindow::UpdateMappedViews()
     }
 
     ui->mappedText->setPlainText(fullMappedText);
+}
+
+int MainWindow::GetMappingLocation()
+{
+    int retVal(0);
+
+    if (ui->mapAsPreFix->isChecked())
+        retVal = dp::MappingModel::kLocationPrefix;
+    else if (ui->mapAsPostFix->isChecked())
+        retVal = dp::MappingModel::kLocationPostFix;
+    else if (ui->mapAsInPlace->isChecked())
+        retVal = dp::MappingModel::kLocationInPlace;
+
+    return retVal;
+}
+
+void MainWindow::SetMappingLocation(int in_newLocation)
+{
+    switch (in_newLocation)
+    {
+    case dp::MappingModel::kLocationPrefix:
+        ui->mapAsPreFix->setChecked(true);
+        break;
+    case dp::MappingModel::kLocationPostFix:
+        ui->mapAsPostFix->setChecked(true);
+        break;
+    case dp::MappingModel::kLocationInPlace:
+    default:
+        ui->mapAsInPlace->setChecked(true);
+    }
 }
 
 void MainWindow::on_actionSave_triggered()

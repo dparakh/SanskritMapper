@@ -30,6 +30,8 @@ private slots:
 
     void on_actionSave_triggered();
 
+    void on_mappedCharsList_currentRowChanged(int currentRow);
+
 private:
     Ui::MainWindow *ui;
     dp::MappingModel m_CurrentMap;

@@ -7,6 +7,35 @@ using namespace std;
 
 static const char kDefaultFile[] = ".SanskritMapper.map";
 #define DEFAULT_FILE QDir::homePath() + "/" + kDefaultFile
+static const QChar kHalant = 0x094d;
+static const QChar kFirstMatra = 0x093e;
+static const QChar kLastMatra = 0x94f;
+static bool IsAMatra (const QChar& in_charToCheck);
+
+namespace  dp {
+
+class SignalBlocker
+{
+public:
+    SignalBlocker (QWidget *in_pForWidget) :
+        m_pWidget (in_pForWidget), m_oldBlockedState(in_pForWidget->signalsBlocked())
+    {
+        m_pWidget->blockSignals(true);
+    }
+
+    ~SignalBlocker()
+    {
+        m_pWidget->blockSignals(m_oldBlockedState);
+    }
+private:
+    SignalBlocker ();
+
+    QWidget *m_pWidget;
+    bool m_oldBlockedState;
+
+};
+
+};
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -109,7 +138,9 @@ void MainWindow::on_sourceCharsList_currentRowChanged(int currentRow)
             SetMappingLocation(mappedLocation);
         }
     }
-    //ToDo: Also change the current Row of the mapped Chars list!
+
+    //Also change the current Row of the mapped Chars list!
+    dp::SignalBlocker blocker(ui->mappedCharsList);
     ui->mappedCharsList->setCurrentRow(currentRow);
 }
 
@@ -126,7 +157,11 @@ void MainWindow::on_updateMapButton_clicked()
 
 void MainWindow::UpdateMappedViews()
 {
-    ui->mappedCharsList->clear();
+    {
+        dp::SignalBlocker blocker(ui->mappedCharsList);
+        ui->mappedCharsList->clear();
+    }
+
     //for each characeter in the source text
     QString sourceText = ui->sourceTextEdit->toPlainText();
     QString fullMappedText;
@@ -156,12 +191,20 @@ void MainWindow::UpdateMappedViews()
             }
             else if (mappedLocation == dp::MappingModel::kLocationPrefix)
             {
-                fullMappedText = fullMappedText.left(fullMappedText.size()-1) + mappedText + fullMappedText.right(1);
+                int posToInsert = fullMappedText.size()-1;
+                while ((posToInsert > 0) && (IsAMatra(fullMappedText.at(posToInsert))))
+                    --posToInsert;
+                fullMappedText.insert(posToInsert, mappedText);
             }
             else
             {
-                fullMappedText += mappedText + toPostFix;
-                toPostFix.clear();
+                fullMappedText += mappedText;
+                //add the post fix only if the right mast char is not a halant
+                if (mappedText.right(1).at(0) != kHalant)
+                {
+                    fullMappedText += toPostFix;
+                    toPostFix.clear();
+                }
             }
         }
         else
@@ -174,6 +217,7 @@ void MainWindow::UpdateMappedViews()
     }
 
     ui->mappedText->setPlainText(fullMappedText);
+
 }
 
 int MainWindow::GetMappingLocation()
@@ -209,4 +253,16 @@ void MainWindow::SetMappingLocation(int in_newLocation)
 void MainWindow::on_actionSave_triggered()
 {
     //m_CurrentMap.SaveToFile("/tmp/test.json");
+}
+
+bool IsAMatra (const QChar& in_charToCheck)
+{
+    const bool retVal ((in_charToCheck >= kFirstMatra) && (in_charToCheck <= kLastMatra));
+    return retVal;
+}
+
+void MainWindow::on_mappedCharsList_currentRowChanged(int currentRow)
+{
+    //mirror the change.
+    ui->sourceCharsList->setCurrentRow(currentRow);
 }

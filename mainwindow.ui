@@ -127,6 +127,12 @@
           <height>50</height>
          </size>
         </property>
+        <property name="styleSheet">
+         <string notr="true">font: 75 14pt &quot;Arial Black&quot;;</string>
+        </property>
+        <property name="locale">
+         <locale language="Hindi" country="India"/>
+        </property>
        </widget>
       </item>
      </layout>
